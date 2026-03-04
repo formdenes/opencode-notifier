@@ -156,6 +156,25 @@ describe("Config", () => {
     expect(isEventNotificationEnabled(config, "user_cancelled")).toBe(false)
   })
 
+  test("loadConfig defaults suppressWhenFocused to true", async () => {
+    const { loadConfig } = await import("./config")
+    const config = loadConfig()
+
+    expect(config.suppressWhenFocused).toBe(true)
+  })
+
+  test("loadConfig parses suppressWhenFocused from config file", async () => {
+    const testConfig = {
+      suppressWhenFocused: false,
+    }
+    writeFileSync(testConfigPath, JSON.stringify(testConfig))
+
+    const { loadConfig } = await import("./config")
+    const config = loadConfig()
+
+    expect(config.suppressWhenFocused).toBe(false)
+  })
+
   test("interpolateMessage substitutes {timestamp} placeholder", async () => {
     const { interpolateMessage } = await import("./config")
     const result = interpolateMessage("Event at {timestamp}", { timestamp: "14:30:05" })
@@ -174,5 +193,12 @@ describe("Config", () => {
     const result = interpolateMessage("Event {turn} at {timestamp}", {})
 
     expect(result).toBe("Event at")
+  })
+
+  test("getStatePath returns path next to config file", async () => {
+    const { getStatePath } = await import("./config")
+    const statePath = getStatePath()
+
+    expect(statePath).toEndWith("opencode-notifier-state.json")
   })
 })

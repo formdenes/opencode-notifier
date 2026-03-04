@@ -54,6 +54,7 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
   "showProjectName": true,
   "showSessionTitle": false,
   "showIcon": true,
+  "suppressWhenFocused": true,
   "notificationSystem": "osascript",
   "linux": {
     "grouping": false
@@ -121,7 +122,8 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
 - `showProjectName` - Show folder name in notification title (default: true)
 - `showSessionTitle` - Include the session title in notification messages via `{sessionTitle}` placeholder (default: true)
 - `showIcon` - Show OpenCode icon, Windows/Linux only (default: true)
-- `notificationSystem` - macOS only: `"osascript"` or `"node-notifier"` (default: "osascript")
+- `suppressWhenFocused` - Skip notifications and sounds when the terminal is the active window (default: true). See [Focus detection](#focus-detection) for platform details
+- `notificationSystem` - macOS only: `"osascript"`, `"node-notifier"`, or `"ghostty"` (default: "osascript"). Use `"ghostty"` if you're running Ghostty terminal for native OSC 777 notifications
 - `linux.grouping` - Linux only: replace notifications in-place instead of stacking (default: false). Requires `notify-send` 0.8+
 
 ### Events
@@ -175,7 +177,7 @@ Messages support placeholder tokens that get replaced with actual values:
 - `{sessionTitle}` - The title/summary of the current session (e.g. "Fix login bug")
 - `{projectName}` - The project folder name
 - `{timestamp}` - Current time in `HH:MM:SS` format (e.g. "14:30:05")
-- `{turn}` - Notification counter for the session, increments with each notification (e.g. 1, 2, 3)
+- `{turn}` - Global notification counter that persists across restarts (e.g. 1, 2, 3). Stored in `~/.config/opencode/opencode-notifier-state.json`
 
 When `showSessionTitle` is `false`, `{sessionTitle}` is replaced with an empty string. Any trailing separators (`: `, ` - `, ` | `) are automatically cleaned up when a placeholder resolves to empty.
 
@@ -228,7 +230,7 @@ Set per-event volume from `0` to `1`:
 
 ### Custom commands
 
-Run your own script when something happens. Use `{event}`, `{message}`, and `{sessionTitle}` as placeholders:
+Run your own script when something happens. Use `{event}`, `{message}`, `{sessionTitle}`, `{projectName}`, `{timestamp}`, and `{turn}` as placeholders:
 
 ```json
 {
@@ -243,7 +245,7 @@ Run your own script when something happens. Use `{event}`, `{message}`, and `{se
 
 - `enabled` - Turn command on/off
 - `path` - Path to your script/executable
-- `args` - Arguments to pass, can use `{event}`, `{message}`, and `{sessionTitle}` tokens
+- `args` - Arguments to pass, can use `{event}`, `{message}`, `{sessionTitle}`, `{projectName}`, `{timestamp}`, and `{turn}` tokens
 - `minDuration` - Skip if response was quick, avoids spam (seconds)
 
 #### Example: Log events to a file
@@ -280,6 +282,51 @@ Run your own script when something happens. Use `{event}`, `{message}`, and `{se
 ```
 
 **NOTE:** If you go with node-notifier and start missing notifications, just switch back or remove the option from the config. Users have reported issues with using node-notifier for receiving only sounds and no notification popups.
+
+## Ghostty notifications
+
+If you're using [Ghostty](https://ghostty.org/) terminal, you can use its native notification system via OSC 777 escape sequences:
+
+```json
+{
+  "notificationSystem": "ghostty"
+}
+```
+
+This sends notifications directly through the terminal instead of using system notification tools. Works on any platform where Ghostty is running.
+
+## Focus detection
+
+When `suppressWhenFocused` is `true` (the default), notifications and sounds are skipped if the terminal running OpenCode is the active/focused window. The idea is simple: if you're already looking at it, you don't need an alert.
+
+To disable this and always get notified:
+
+```json
+{
+  "suppressWhenFocused": false
+}
+```
+
+### Platform support
+
+| Platform | Method | Requirements | Status |
+|----------|--------|--------------|--------|
+| macOS | AppleScript (`System Events`) | None | Untested |
+| Linux X11 | `xdotool` | `xdotool` installed | Untested |
+| Linux Wayland (Hyprland) | `hyprctl activewindow` | None | Tested |
+| Linux Wayland (Sway) | `swaymsg -t get_tree` | None | Untested |
+| Linux Wayland (KDE) | `kdotool` | `kdotool` installed | Untested |
+| Linux Wayland (GNOME) | Not supported | - | Falls back to always notifying |
+| Linux Wayland (Niri, river, dwl, Cosmic, etc.) | Not supported | - | Falls back to always notifying |
+| Windows | `GetForegroundWindow()` via PowerShell | None | Untested |
+
+**Unsupported compositors**: Wayland has no standard protocol for querying the focused window. Each compositor has its own IPC, and GNOME intentionally doesn't expose focus information. Unsupported compositors fall back to always notifying.
+
+**tmux/screen**: When running inside tmux, the tmux server daemonizes and detaches from the terminal's process tree. The plugin handles this by querying the tmux client PID and walking from there. GNU Screen has the same issue but is not currently handled (falls back to always notifying).
+
+**Fail-open design**: If detection fails for any reason (missing tools, unknown compositor, permissions), it falls back to always notifying. It never silently eats your notifications.
+
+If you test on a platform marked "Untested" and it works (or doesn't), please open an issue and let us know.
 
 ## Linux: Notification Grouping
 
