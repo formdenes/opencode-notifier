@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.30] - 2026-03-04
+
+### Added
+- New `suppressWhenFocused` config option to suppress notifications when the terminal running OpenCode is focused
+- Works across all platforms: Hyprland, Sway, KDE Wayland, X11, macOS, Windows
+- Full tmux support with session/window/pane awareness
+
+### Fixed
+- **Ghostty multi-window support:** Replaced PID-based detection with window ID comparison
+  - Notifications now correctly trigger when switching between Ghostty windows
+  - Ghostty uses a single process for all windows, so PID detection was matching any Ghostty window
+- **tmux session awareness:** Fixed detection when switching between tmux sessions
+
+### Known Limitations
+- Ghostty native tabs (without tmux) cannot be distinguished — Ghostty does not yet expose a tab query IPC API ([ghostty-org/ghostty#2353](https://github.com/ghostty-org/ghostty/issues/2353))
+
+### Technical Changes
+- New `src/focus.ts` module for cross-platform window focus detection
+- Complete rewrite of focus detection logic (288 lines → 118 lines)
+- No longer uses process ancestry walking
+
 ## [0.1.28] - 2026-02-23
 
 ### Fixed
