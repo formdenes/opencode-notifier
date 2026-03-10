@@ -352,7 +352,6 @@ async function handleEventWithElapsedTime(
 
 export const NotifierPlugin: Plugin = async ({ client, directory }) => {
   if (process.env.OPENCODE_CLIENT !== "cli") {
-    // OpenCode on Desktop and Web already have built-in notifications.
     return {}
   }
 
