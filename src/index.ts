@@ -351,7 +351,8 @@ async function handleEventWithElapsedTime(
 }
 
 export const NotifierPlugin: Plugin = async ({ client, directory }) => {
-  if (process.env.OPENCODE_CLIENT !== "cli") {
+  const clientEnv = process.env.OPENCODE_CLIENT
+  if (clientEnv && clientEnv !== "cli") {
     return {}
   }
 
