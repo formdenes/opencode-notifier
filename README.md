@@ -123,7 +123,7 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
 - `showSessionTitle` - Include the session title in notification messages via `{sessionTitle}` placeholder (default: true)
 - `showIcon` - Show OpenCode icon, Windows/Linux only (default: true)
 - `suppressWhenFocused` - Skip notifications and sounds when the terminal is the active window (default: true). See [Focus detection](#focus-detection) for platform details
-- `notificationSystem` - macOS only: `"osascript"`, `"node-notifier"`, or `"ghostty"` (default: "osascript"). Use `"ghostty"` if you're running Ghostty terminal for native OSC 777 notifications
+- `notificationSystem` - macOS only: `"osascript"`, `"node-notifier"`, or `"ghostty"` (default: "osascript"). Use `"ghostty"` if you're running Ghostty terminal for native OSC 9 notifications
 - `linux.grouping` - Linux only: replace notifications in-place instead of stacking (default: false). Requires `notify-send` 0.8+
 
 ### Events

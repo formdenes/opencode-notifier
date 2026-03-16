@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.33] - 2026-03-16
+
+### Added
+- Per-event `command` flag in events config to control whether the custom command runs for a specific event (#47) - @Odonno
+  - Defaults to `true` for all events (backwards compatible)
+  - Example: set `"command": false` on `subagent_complete` to suppress the command without affecting sound/notification
+
+### Fixed
+- Linux notifications now show `opencode` as the app name instead of the default `notify-send` label (#46) - @rhajizada
+- mpv sound player no longer triggers the autoload script, preventing multiple sounds from playing at once (#42) - @ekisu
+
 ## [0.1.32] - 2026-03-10
 
 ### Fixed
