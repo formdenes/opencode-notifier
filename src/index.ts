@@ -25,6 +25,7 @@ const pendingIdleTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const sessionIdleSequence = new Map<string, number>()
 const sessionErrorSuppressionAt = new Map<string, number>()
 const sessionLastBusyAt = new Map<string, number>()
+const sessionStatus = new Map<string, string>()
 
 let globalTurnCount: number | null = null
 
@@ -381,8 +382,21 @@ export const NotifierPlugin: Plugin = async ({ client, directory }) => {
         }
       }
 
-      if (event.type === "session.status" && event.properties.status.type === "busy") {
-        markSessionBusy(event.properties.sessionID)
+      if (event.type === "session.status") {
+        const sessionID = event.properties.sessionID
+        const currentStatus = event.properties.status.type
+        const previousStatus = sessionStatus.get(sessionID)
+
+        if (currentStatus === "busy" && previousStatus !== "busy") {
+          const sessionTitle = config.showSessionTitle ? (await getSessionInfo(client, sessionID)).title : null
+          await handleEvent(config, "working", projectName, null, sessionTitle, sessionID)
+        }
+
+        sessionStatus.set(sessionID, currentStatus)
+
+        if (currentStatus === "busy") {
+          markSessionBusy(sessionID)
+        }
       }
 
       if (event.type === "session.error") {
